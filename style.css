@@ -1792,3 +1792,42 @@ img {
 
 /* reserve space for the mood chart so nothing jumps when it appears (CLS) */
 #radar{aspect-ratio:1/1;max-width:340px;margin:0 auto}
+
+/* =========================================
+   ORV HERO TITLE — MOBILE RESPONSIVE FIX
+   แก้คำ OMNISCIENT ไม่ให้ตัว T ตกบรรทัด
+========================================= */
+
+/* มือถือและหน้าจอขนาดเล็ก */
+@media (max-width: 575px) {
+    .hero .display {
+        width: 100%;
+        max-width: 100%;
+        font-size: clamp(24px, 7.5vw, 42px);
+        letter-spacing: 0.02em;
+        line-height: 1.5;
+        padding-left: 0;
+        padding-right: 0;
+        white-space: normal;
+        overflow-wrap: normal;
+        word-break: normal;
+    }
+}
+
+/* มือถือกว้างไม่เกิน 390px */
+@media (max-width: 390px) {
+    .hero .display {
+        font-size: 25px;
+        letter-spacing: 0;
+        line-height: 1.6;
+    }
+}
+
+/* มือถือกว้างไม่เกิน 360px */
+@media (max-width: 360px) {
+    .hero .display {
+        font-size: 22px;
+        letter-spacing: 0;
+        line-height: 1.7;
+    }
+}
