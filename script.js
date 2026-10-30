@@ -1,16 +1,13 @@
 /* ========================================
-   1. INTRO SCREEN
+   1. INTRO
 ======================================== */
 
 const intro = document.getElementById("intro");
-const skip = document.getElementById("skip");
+const skipButton = document.getElementById("skip");
 
-let introClosed = false;
+function closeIntro() {
+    if (!intro || intro.classList.contains("out")) return;
 
-function leaveIntro() {
-    if (introClosed || !intro) return;
-
-    introClosed = true;
     intro.classList.add("out");
 
     setTimeout(() => {
@@ -18,11 +15,9 @@ function leaveIntro() {
     }, 1300);
 }
 
-if (skip) {
-    skip.addEventListener("click", leaveIntro);
-}
+skipButton?.addEventListener("click", closeIntro);
 
-setTimeout(leaveIntro, 4200);
+setTimeout(closeIntro, 4200);
 
 
 /* ========================================
@@ -35,11 +30,11 @@ const characters = [
         name: "KIM DOKJA",
         role: "ผู้อ่านคนเดียวที่รู้อนาคต",
         icon: "book",
-        color: "#ffffff",
+        color: "#defbff",
         description:
             "พนักงานออฟฟิศธรรมดาที่อ่านนิยายเรื่องเดียวจนจบ 3,149 ตอน ความรู้ของเขาคืออาวุธที่ไม่มีใครมี",
-        back:
-            "อาวุธของเขาไม่ใช่พลัง แต่คือสิ่งที่เขารู้",
+        quote:
+            "I will finish your story",
         tags: ["ผู้อ่าน", "ไหวพริบ", "รู้อนาคต"]
     },
     {
@@ -47,11 +42,11 @@ const characters = [
         name: "YOO JOONGHYUK",
         role: "ตัวเอกของนิยายต้นฉบับ",
         icon: "sword",
-        color: "#c7cfe4",
+        color: "#f8ffde",
         description:
             "ผู้ผ่านโลกที่ล่มสลายมานับครั้งไม่ถ้วน จนรู้ดีว่าต้องทำอย่างไรจึงจะรอด",
-        back:
-            "ทุกการรอดชีวิตคือบทเรียนจากครั้งก่อน",
+        quote:
+            "Will I ever get to meet you again?",
         tags: ["ตัวเอกต้นฉบับ", "วนซ้ำ", "นักสู้"]
     },
     {
@@ -59,12 +54,12 @@ const characters = [
         name: "HAN SOOYOUNG",
         role: "นักเขียนผู้พัวพันกับเรื่องราว",
         icon: "quill",
-        color: "#eadfc4",
+        color: "#ecdbfd",
         description:
             "นักเขียนผู้มีความสัมพันธ์ซับซ้อนกับเรื่องราว ตัวละคร และความจริง",
-        back:
-            "คนที่เขียนเรื่อง อาจไม่ใช่คนที่ควบคุมมันได้",
-        tags: ["นักเขียน", "เรื่องซ้อนเรื่อง", "ปริศนา"]
+        quote:
+            "๊Ultimatary,every human is their own writer",
+        tags: ["นักเขียน", "เจ้าเล่ห์", "ปริศนา"]
     }
 ];
 
@@ -74,40 +69,38 @@ const characters = [
 ======================================== */
 
 const stage = document.getElementById("stage");
-const dots = document.getElementById("dots");
+const dotsContainer = document.getElementById("dots");
 const characterSection = document.getElementById("chars");
+const previousButton = document.getElementById("pv");
+const nextButton = document.getElementById("nx");
 
 let currentIndex = 0;
-let cards = [];
 
-if (stage && dots && characterSection) {
-
+if (stage && dotsContainer && characterSection) {
     characters.forEach((character, index) => {
         const card = document.createElement("div");
 
         card.className = "card";
-        card.dataset.i = index;
+        card.dataset.index = index;
         card.style.setProperty("--c", character.color);
-
-        const iconHTML = `
-            <div class="ic">
-                <svg class="i">
-                    <use href="#${character.icon}"></use>
-                </svg>
-            </div>
-        `;
 
         card.innerHTML = `
             <div class="tilt">
                 <div class="f">
 
+                    <!-- Front of card -->
                     <div class="face">
+
                         <div
                             class="ph"
                             style="background-image: url('${character.img}')"
                         ></div>
 
-                        ${iconHTML}
+                        <div class="ic">
+                            <svg class="i">
+                                <use href="#${character.icon}"></use>
+                            </svg>
+                        </div>
 
                         <div class="glare"></div>
 
@@ -118,25 +111,32 @@ if (stage && dots && characterSection) {
                         </div>
 
                         <p>${character.description}</p>
+
                     </div>
 
+                    <!-- Back of card -->
                     <div class="face bk">
+
                         <div
                             class="ph"
                             style="background-image: url('${character.img}')"
                         ></div>
 
-                        ${iconHTML}
+                        <div class="ic">
+                            <svg class="i">
+                                <use href="#${character.icon}"></use>
+                            </svg>
+                        </div>
 
                         <h3>${character.name}</h3>
 
                         <p
                             style="
-                                font: 500 18px 'Noto Serif Thai';
+                                font: 500 18px 'Noto Serif Thai', serif;
                                 margin-top: 10px;
                             "
                         >
-                            ${character.back}
+                            ${character.quote}
                         </p>
 
                         <div class="tags">
@@ -144,6 +144,7 @@ if (stage && dots && characterSection) {
                                 .map(tag => `<i>${tag}</i>`)
                                 .join("")}
                         </div>
+
                     </div>
 
                 </div>
@@ -152,10 +153,16 @@ if (stage && dots && characterSection) {
 
         stage.appendChild(card);
 
-        dots.appendChild(document.createElement("i"));
-    });
+        const dot = document.createElement("i");
+        dot.setAttribute("aria-label", character.name);
+        dot.style.cursor = "pointer";
 
-    cards = [...stage.children];
+        dot.addEventListener("click", () => {
+            goToCharacter(index);
+        });
+
+        dotsContainer.appendChild(dot);
+    });
 }
 
 
@@ -163,8 +170,16 @@ if (stage && dots && characterSection) {
    4. CHARACTER SLIDER
 ======================================== */
 
-function updateSlider() {
-    if (!cards.length) return;
+const cards = stage
+    ? [...stage.querySelectorAll(".card")]
+    : [];
+
+const dots = dotsContainer
+    ? [...dotsContainer.children]
+    : [];
+
+function updateCharacters() {
+    if (!stage || !characterSection) return;
 
     const step = Math.min(230, window.innerWidth * 0.46);
 
@@ -185,200 +200,179 @@ function updateSlider() {
             scale(${1 - distance * 0.06})
         `;
 
-        card.style.opacity =
-            distance > 1 ? "0" :
-            distance === 1 ? "0.5" : "1";
+        card.style.opacity = distance > 1
+            ? "0"
+            : distance === 1
+                ? "0.5"
+                : "1";
 
-        card.style.filter =
-            distance > 0 ? "blur(2px)" : "none";
+        card.style.filter = distance > 0
+            ? "blur(2px)"
+            : "none";
 
-        card.style.zIndex = 9 - distance;
+        card.style.zIndex = String(9 - distance);
 
-        card.style.pointerEvents =
-            distance > 1 ? "none" : "auto";
+        card.style.pointerEvents = distance > 1
+            ? "none"
+            : "auto";
     });
 
-    if (dots) {
-        [...dots.children].forEach((dot, index) => {
-            dot.classList.toggle(
-                "on",
-                index === currentIndex
-            );
-        });
-    }
+    dots.forEach((dot, index) => {
+        dot.classList.toggle("on", index === currentIndex);
+    });
 
-    if (characterSection) {
-        characterSection.style.setProperty(
-            "--aura",
-            characters[currentIndex].color
-        );
-    }
+    characterSection.style.setProperty(
+        "--aura",
+        characters[currentIndex].color
+    );
 }
 
-
 function goToCharacter(index) {
-    if (!cards.length) return;
-
     currentIndex = Math.max(
         0,
         Math.min(characters.length - 1, index)
     );
 
-    updateSlider();
+    updateCharacters();
 }
 
+previousButton?.addEventListener("click", () => {
+    goToCharacter(currentIndex - 1);
+});
 
-/* Previous and next buttons */
+nextButton?.addEventListener("click", () => {
+    goToCharacter(currentIndex + 1);
+});
 
-const previousButton = document.getElementById("pv");
-const nextButton = document.getElementById("nx");
-
-if (previousButton) {
-    previousButton.addEventListener("click", () => {
+stage?.addEventListener("keydown", event => {
+    if (event.key === "ArrowLeft") {
         goToCharacter(currentIndex - 1);
-    });
-}
+    }
 
-if (nextButton) {
-    nextButton.addEventListener("click", () => {
+    if (event.key === "ArrowRight") {
         goToCharacter(currentIndex + 1);
-    });
-}
-
-
-/* Keyboard controls */
-
-if (stage) {
-    stage.addEventListener("keydown", event => {
-        if (event.key === "ArrowLeft") {
-            goToCharacter(currentIndex - 1);
-        }
-
-        if (event.key === "ArrowRight") {
-            goToCharacter(currentIndex + 1);
-        }
-    });
-}
-
-
-/* Swipe and flip cards */
-
-let startX = null;
-
-if (stage) {
-    stage.addEventListener("pointerdown", event => {
-        startX = event.clientX;
-    });
-
-    stage.addEventListener("pointerup", event => {
-        if (startX === null) return;
-
-        const difference = event.clientX - startX;
-        startX = null;
-
-        if (Math.abs(difference) > 40) {
-            goToCharacter(
-                currentIndex + (difference < 0 ? 1 : -1)
-            );
-
-            return;
-        }
-
-        const card = event.target.closest(".card");
-
-        if (!card) return;
-
-        const index = Number(card.dataset.i);
-
-        if (index === currentIndex) {
-            card.classList.toggle("flip");
-        } else {
-            goToCharacter(index);
-        }
-    });
-
-    stage.addEventListener("pointermove", event => {
-        const card = cards[currentIndex];
-
-        if (!card) return;
-
-        const rect = card.getBoundingClientRect();
-
-        const x = (event.clientX - rect.left) / rect.width;
-        const y = (event.clientY - rect.top) / rect.height;
-
-        const tilt = card.querySelector(".tilt");
-
-        if (!tilt) return;
-
-        if (x < 0 || x > 1 || y < 0 || y > 1) {
-            tilt.style.setProperty("--rx", "0deg");
-            tilt.style.setProperty("--ry", "0deg");
-            return;
-        }
-
-        tilt.style.setProperty(
-            "--ry",
-            `${(x - 0.5) * 16}deg`
-        );
-
-        tilt.style.setProperty(
-            "--rx",
-            `${(0.5 - y) * 14}deg`
-        );
-
-        const glare = card.querySelector(".glare");
-
-        if (glare) {
-            glare.style.setProperty("--gx", `${x * 100}%`);
-            glare.style.setProperty("--gy", `${y * 100}%`);
-        }
-    });
-
-    window.addEventListener("resize", updateSlider);
-
-    updateSlider();
-}
+    }
+});
 
 
 /* ========================================
-   5. SCROLL REVEAL ANIMATIONS
+   5. SWIPE AND FLIP CARDS
+======================================== */
+
+let startX = null;
+
+stage?.addEventListener("pointerdown", event => {
+    startX = event.clientX;
+});
+
+stage?.addEventListener("pointerup", event => {
+    if (startX === null) return;
+
+    const distance = event.clientX - startX;
+    startX = null;
+
+    if (Math.abs(distance) > 40) {
+        goToCharacter(
+            currentIndex + (distance < 0 ? 1 : -1)
+        );
+
+        return;
+    }
+
+    const card = event.target.closest(".card");
+
+    if (!card) return;
+
+    const index = Number(card.dataset.index);
+
+    if (index === currentIndex) {
+        card.classList.toggle("flip");
+    } else {
+        goToCharacter(index);
+    }
+});
+
+stage?.addEventListener("pointermove", event => {
+    if (!cards.length) return;
+
+    const card = cards[currentIndex];
+    const tilt = card.querySelector(".tilt");
+    const glare = card.querySelector(".glare");
+
+    const rect = card.getBoundingClientRect();
+
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+
+    if (x < 0 || x > 1 || y < 0 || y > 1) {
+        tilt.style.setProperty("--rx", "0deg");
+        tilt.style.setProperty("--ry", "0deg");
+        return;
+    }
+
+    tilt.style.setProperty(
+        "--ry",
+        `${(x - 0.5) * 16}deg`
+    );
+
+    tilt.style.setProperty(
+        "--rx",
+        `${(0.5 - y) * 14}deg`
+    );
+
+    glare?.style.setProperty("--gx", `${x * 100}%`);
+    glare?.style.setProperty("--gy", `${y * 100}%`);
+});
+
+stage?.addEventListener("pointerleave", () => {
+    const card = cards[currentIndex];
+
+    if (!card) return;
+
+    const tilt = card.querySelector(".tilt");
+
+    tilt.style.setProperty("--rx", "0deg");
+    tilt.style.setProperty("--ry", "0deg");
+});
+
+window.addEventListener("resize", updateCharacters);
+
+updateCharacters();
+
+
+/* ========================================
+   6. SCROLL REVEAL
 ======================================== */
 
 if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(entries => {
+    const revealObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
 
-            const element = entry.target;
+            entry.target.classList.add("on");
 
-            element.classList.add("on");
-
-            if (element.id === "mood") {
+            if (entry.target.id === "mood") {
                 startRadar();
             }
 
-            observer.unobserve(element);
+            revealObserver.unobserve(entry.target);
         });
     }, {
         threshold: 0.3
     });
 
     document.querySelectorAll(".rv, #clock").forEach(element => {
-        observer.observe(element);
+        revealObserver.observe(element);
     });
-
 } else {
     document.querySelectorAll(".rv, #clock").forEach(element => {
         element.classList.add("on");
     });
-
-    startRadar();
 }
 
 
 /* ========================================
-   6. STAR BACKGROUND
+   7. STARRY SKY AND SHOOTING STARS
 ======================================== */
 
 const canvas = document.getElementById("sky");
@@ -386,32 +380,18 @@ const context = canvas?.getContext("2d");
 
 let canvasWidth = 0;
 let canvasHeight = 0;
-
 let stars = [];
 let shootingStars = [];
 let nextShootingStar = 600;
 
-
 function resizeCanvas() {
     if (!canvas || !context) return;
 
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-
-    canvasWidth = window.innerWidth;
-    canvasHeight = window.innerHeight;
-
-    canvas.width = canvasWidth * pixelRatio;
-    canvas.height = canvasHeight * pixelRatio;
-
-    canvas.style.width = `${canvasWidth}px`;
-    canvas.style.height = `${canvasHeight}px`;
-
-    context.setTransform(
-        pixelRatio, 0, 0, pixelRatio, 0, 0
-    );
+    canvasWidth = canvas.width = window.innerWidth;
+    canvasHeight = canvas.height = window.innerHeight;
 
     stars = Array.from({
-        length: Math.min(150, Math.floor(canvasWidth / 6))
+        length: Math.min(150, canvasWidth / 6)
     }, () => ({
         x: Math.random() * canvasWidth,
         y: Math.random() * canvasHeight,
@@ -421,24 +401,35 @@ function resizeCanvas() {
     }));
 }
 
+resizeCanvas();
 
-function drawStars(time) {
+window.addEventListener("resize", resizeCanvas);
+
+let previousFrame = 0;
+
+function drawSky(time) {
     if (!context) return;
+
+    const deltaTime = (time - previousFrame) / 1000 || 0;
+    previousFrame = time;
 
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 
+    // Draw stars
     stars.forEach(star => {
-        const y =
-            ((star.y - window.scrollY * star.depth) % canvasHeight
-                + canvasHeight) % canvasHeight;
+        const y = (
+            (star.y - window.scrollY * star.depth) % canvasHeight
+            + canvasHeight
+        ) % canvasHeight;
 
         context.globalAlpha =
             0.35 + 0.65 * Math.abs(
                 Math.sin(time / 1300 + star.phase)
             );
 
-        context.fillStyle =
-            star.radius > 1.1 ? "#ffffff" : "#b9c0d8";
+        context.fillStyle = star.radius > 1.1
+            ? "#ffffff"
+            : "#b9c0d8";
 
         context.beginPath();
 
@@ -453,40 +444,26 @@ function drawStars(time) {
         context.fill();
     });
 
-    context.globalAlpha = 1;
-
+    // Create shooting stars
     if (time > nextShootingStar) {
         nextShootingStar =
             time + 1400 + Math.random() * 3200;
 
-        const angle =
-            Math.PI * (0.68 + Math.random() * 0.12);
+        const angle = Math.PI * (
+            0.68 + Math.random() * 0.12
+        );
 
         shootingStars.push({
             x: Math.random() * canvasWidth * 1.1,
             y: Math.random() * canvasHeight * 0.5,
-            vx: -Math.cos(angle),
+            vx: Math.cos(angle) * -1,
             vy: Math.sin(angle),
             life: 0,
             length: 110 + Math.random() * 130
         });
     }
-}
 
-
-let previousFrameTime = 0;
-
-function animateSky(time) {
-    if (!context) return;
-
-    const deltaTime = previousFrameTime
-        ? (time - previousFrameTime) / 1000
-        : 0;
-
-    previousFrameTime = time;
-
-    drawStars(time);
-
+    // Draw shooting stars
     shootingStars = shootingStars.filter(star => {
         star.life += deltaTime;
 
@@ -495,7 +472,10 @@ function animateSky(time) {
         star.x += star.vx * speed * deltaTime;
         star.y += star.vy * speed * deltaTime * 0.7;
 
-        const alpha = Math.max(0, 1 - star.life / 1.1);
+        const alpha = Math.max(
+            0,
+            1 - star.life / 1.1
+        );
 
         const gradient = context.createLinearGradient(
             star.x,
@@ -514,6 +494,7 @@ function animateSky(time) {
             "rgba(255,255,255,0)"
         );
 
+        context.globalAlpha = 1;
         context.strokeStyle = gradient;
         context.lineWidth = 2;
 
@@ -528,8 +509,7 @@ function animateSky(time) {
 
         context.stroke();
 
-        context.fillStyle =
-            `rgba(255,255,255,${alpha})`;
+        context.fillStyle = `rgba(255,255,255,${alpha})`;
 
         context.beginPath();
 
@@ -546,21 +526,18 @@ function animateSky(time) {
         return star.life < 1.1;
     });
 
-    requestAnimationFrame(animateSky);
+    context.globalAlpha = 1;
+
+    requestAnimationFrame(drawSky);
 }
 
-
-if (canvas && context) {
-    resizeCanvas();
-
-    window.addEventListener("resize", resizeCanvas);
-
-    requestAnimationFrame(animateSky);
+if (context) {
+    requestAnimationFrame(drawSky);
 }
 
 
 /* ========================================
-   7. SCROLL PROGRESS AND CURSOR LIGHT
+   8. CLOCK, PROGRESS BAR, PARALLAX
 ======================================== */
 
 const hourHand = document.querySelector(".hh");
@@ -570,24 +547,20 @@ const clockRing = document.querySelector(".ring");
 
 const bannerImage = document.querySelector("#banner img");
 const progressBar = document.getElementById("prog");
-const cursorLight = document.getElementById("cur");
+const cursorGlow = document.getElementById("cur");
 
 let clockAngle = 0;
-
 let mouseX = 0;
 let mouseY = 0;
-
 let cursorX = 0;
 let cursorY = 0;
-
 
 window.addEventListener("pointermove", event => {
     mouseX = event.clientX;
     mouseY = event.clientY;
 });
 
-
-function animateScrollEffects(time) {
+function animatePage(time) {
     const targetAngle = -window.scrollY * 0.55;
 
     clockAngle += (targetAngle - clockAngle) * 0.07;
@@ -612,17 +585,19 @@ function animateScrollEffects(time) {
             `rotate(${-clockAngle * 0.6}deg)`;
     }
 
-    if (progressBar) {
-        const scrollableHeight =
-            document.documentElement.scrollHeight - window.innerHeight;
+    // Reading progress
+    const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
 
-        const progress = scrollableHeight > 0
-            ? window.scrollY / scrollableHeight * 100
+    if (progressBar) {
+        const progress = maxScroll > 0
+            ? (window.scrollY / maxScroll) * 100
             : 0;
 
         progressBar.style.width = `${progress}%`;
     }
 
+    // Banner parallax
     if (bannerImage) {
         const rect = bannerImage.parentNode.getBoundingClientRect();
 
@@ -630,51 +605,46 @@ function animateScrollEffects(time) {
             `translateY(${rect.top * -0.12}px)`;
     }
 
-    if (cursorLight) {
+    // Cursor glow
+    if (cursorGlow) {
         cursorX += (mouseX - cursorX) * 0.12;
         cursorY += (mouseY - cursorY) * 0.12;
 
-        cursorLight.style.transform =
+        cursorGlow.style.transform =
             `translate(${cursorX}px, ${cursorY}px)`;
     }
 
-    requestAnimationFrame(animateScrollEffects);
+    requestAnimationFrame(animatePage);
 }
 
-requestAnimationFrame(animateScrollEffects);
+requestAnimationFrame(animatePage);
 
 
 /* ========================================
-   8. COVER TILT EFFECT
+   9. COVER TILT EFFECT
 ======================================== */
 
 const cover = document.getElementById("cvr");
+const coverWrapper = cover?.parentElement;
 
-if (cover && cover.parentNode) {
-    const coverContainer = cover.parentNode;
+coverWrapper?.addEventListener("pointermove", event => {
+    const rect = cover.getBoundingClientRect();
 
-    coverContainer.addEventListener("pointermove", event => {
-        const rect = cover.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
 
-        const x =
-            (event.clientX - rect.left) / rect.width - 0.5;
+    cover.style.setProperty("--ry", `${x * 20}deg`);
+    cover.style.setProperty("--rx", `${-y * 16}deg`);
+});
 
-        const y =
-            (event.clientY - rect.top) / rect.height - 0.5;
-
-        cover.style.setProperty("--ry", `${x * 20}deg`);
-        cover.style.setProperty("--rx", `${-y * 16}deg`);
-    });
-
-    coverContainer.addEventListener("pointerleave", () => {
-        cover.style.setProperty("--ry", "0deg");
-        cover.style.setProperty("--rx", "0deg");
-    });
-}
+coverWrapper?.addEventListener("pointerleave", () => {
+    cover?.style.setProperty("--ry", "0deg");
+    cover?.style.setProperty("--rx", "0deg");
+});
 
 
 /* ========================================
-   9. MOOD RADAR CHART
+   10. MOOD RADAR CHART
 ======================================== */
 
 const moodData = [
@@ -686,7 +656,6 @@ const moodData = [
 ];
 
 let radarStarted = false;
-
 
 function startRadar() {
     if (radarStarted) return;
@@ -701,9 +670,8 @@ function startRadar() {
     const center = size / 2;
     const radius = 112;
 
-    function getPoint(index, distance) {
-        const angle =
-            (-90 + 72 * index) * Math.PI / 180;
+    function point(index, distance) {
+        const angle = (-90 + 72 * index) * Math.PI / 180;
 
         return [
             center + distance * Math.cos(angle),
@@ -715,77 +683,60 @@ function startRadar() {
         <svg viewBox="0 0 ${size} ${size}">
     `;
 
-    /* Radar grid */
-
+    // Radar grid
     [0.25, 0.5, 0.75, 1].forEach(scale => {
         const points = moodData
-            .map((_, index) => {
-                return getPoint(
-                    index,
-                    radius * scale
-                ).join(",");
-            })
+            .map((_, index) => point(index, radius * scale).join(","))
             .join(" ");
-
-        const opacity = scale === 1 ? 0.5 : 0.18;
 
         svg += `
             <polygon
                 fill="none"
-                stroke="#ffffff"
-                stroke-opacity="${opacity}"
+                stroke="#fff"
+                stroke-opacity="${scale === 1 ? 0.5 : 0.18}"
                 points="${points}"
             />
         `;
     });
 
-
-    /* Axis lines and labels */
-
+    // Radar labels
     moodData.forEach((item, index) => {
-        const point = getPoint(index, radius);
-        const labelPoint = getPoint(index, radius + 26);
+        const position = point(index, radius);
+        const labelPosition = point(index, radius + 26);
 
         svg += `
             <line
                 x1="${center}"
                 y1="${center}"
-                x2="${point[0]}"
-                y2="${point[1]}"
-                stroke="#ffffff"
-                stroke-opacity="0.2"
+                x2="${position[0]}"
+                y2="${position[1]}"
+                stroke="#fff"
+                stroke-opacity=".2"
             />
 
             <text
-                x="${labelPoint[0]}"
-                y="${labelPoint[1] + 4}"
-            >
-                ${item[0]}
-            </text>
+                x="${labelPosition[0]}"
+                y="${labelPosition[1] + 4}"
+            >${item[0]}</text>
 
             <text
-                class="v"
-                x="${labelPoint[0]}"
-                y="${labelPoint[1] + 19}"
+                class="radar-value"
+                x="${labelPosition[0]}"
+                y="${labelPosition[1] + 19}"
                 style="fill:#F5F5F5;font-size:13px"
-            >
-                0
-            </text>
+            >0</text>
         `;
     });
 
-
-    /* Data polygon and points */
-
+    // Radar polygon and points
     svg += `
         <polygon class="pl" points=""></polygon>
-
         ${moodData.map(() => `
             <circle
                 r="4"
-                fill="#ffffff"
-                style="filter:drop-shadow(0 0 6px #ffffff)"
-            />
+                fill="#fff"
+                style="filter:drop-shadow(0 0 6px #fff)"
+            ></circle>
         `).join("")}
 
         <g
@@ -797,10 +748,10 @@ function startRadar() {
                 cy="${center}"
                 r="${radius + 8}"
                 fill="none"
-                stroke="#ffffff"
-                stroke-opacity="0.25"
+                stroke="#fff"
+                stroke-opacity=".25"
                 stroke-dasharray="2 8"
-            />
+            ></circle>
         </g>
 
         </svg>
@@ -810,11 +761,10 @@ function startRadar() {
 
     const polygon = radar.querySelector(".pl");
     const points = radar.querySelectorAll('circle[r="4"]');
-    const values = radar.querySelectorAll(".v");
-    const spinningRing = radar.querySelector(".sp");
+    const values = radar.querySelectorAll(".radar-value");
+    const spinner = radar.querySelector(".sp");
 
     let startTime = null;
-
 
     function animateRadar(time) {
         if (startTime === null) {
@@ -826,10 +776,9 @@ function startRadar() {
             (time - startTime) / 2200
         );
 
-        const easing =
-            1 - Math.pow(1 - progress, 3);
+        const easing = 1 - Math.pow(1 - progress, 3);
 
-        const coordinates = [];
+        const polygonPoints = [];
 
         moodData.forEach((item, index) => {
             const breathing = progress === 1
@@ -839,23 +788,24 @@ function startRadar() {
             const valueRadius =
                 radius * (item[1] / 100) * easing * breathing;
 
-            const point = getPoint(index, valueRadius);
+            const position = point(index, valueRadius);
 
-            coordinates.push(point.join(","));
+            polygonPoints.push(position.join(","));
 
-            points[index].setAttribute("cx", point[0]);
-            points[index].setAttribute("cy", point[1]);
+            points[index].setAttribute("cx", position[0]);
+            points[index].setAttribute("cy", position[1]);
 
-            values[index].textContent =
-                Math.round(item[1] * easing);
+            values[index].textContent = Math.round(
+                item[1] * easing
+            );
         });
 
         polygon.setAttribute(
             "points",
-            coordinates.join(" ")
+            polygonPoints.join(" ")
         );
 
-        spinningRing.style.transform =
+        spinner.style.transform =
             `rotate(${time / 90}deg)`;
 
         requestAnimationFrame(animateRadar);
@@ -866,51 +816,279 @@ function startRadar() {
 
 
 /* ========================================
-   10. FLOATING PAPER EFFECT
+   11. FLOATING PAPERS
 ======================================== */
 
 (function createFloatingPapers() {
-    const paperContainer = document.getElementById("papers");
+    const wrapper = document.getElementById("papers");
 
-    if (!paperContainer) return;
+    if (!wrapper) return;
 
-    const paperCount =
-        window.innerWidth < 600 ? 9 : 16;
+    const amount = window.innerWidth < 600 ? 9 : 16;
 
-    for (let i = 0; i < paperCount; i++) {
+    for (let index = 0; index < amount; index++) {
         const paper = document.createElement("div");
+        const style = paper.style;
 
         paper.className = "pp";
 
-        paper.style.left = `${Math.random() * 100}%`;
+        style.left = `${Math.random() * 100}%`;
 
-        paper.style.setProperty(
+        style.setProperty(
             "--t",
             `${20 + Math.random() * 22}s`
         );
 
-        paper.style.setProperty(
+        style.setProperty(
             "--dl",
             `${-Math.random() * 40}s`
         );
 
-        paper.style.setProperty(
+        style.setProperty(
             "--dx",
             `${Math.random() * 240 - 120}px`
         );
 
-        paper.style.setProperty(
+        style.setProperty(
             "--w",
             `${18 + Math.random() * 26}px`
         );
 
-        paper.style.setProperty(
+        style.setProperty(
             "--f",
             `${2.2 + Math.random() * 2.5}s`
         );
 
         paper.innerHTML = "<i></i>";
 
-        paperContainer.appendChild(paper);
+        wrapper.appendChild(paper);
     }
 })();
+
+
+/* ========================================
+   12. FALLING FEATHERS
+======================================== */
+
+(function createFallingFeathers() {
+    const ending = document.querySelector(".end");
+
+    if (!ending) return;
+
+    const amount = window.innerWidth < 600 ? 6 : 11;
+
+    for (let index = 0; index < amount; index++) {
+        const feather = document.createElement("span");
+        const style = feather.style;
+
+        feather.className = "ff";
+
+        style.left = `${Math.random() * 100}%`;
+
+        style.setProperty(
+            "--t",
+            `${9 + Math.random() * 9}s`
+        );
+
+        style.setProperty(
+            "--dl",
+            `${-Math.random() * 14}s`
+        );
+
+        style.setProperty(
+            "--s",
+            0.6 + Math.random() * 0.7
+        );
+
+        feather.innerHTML = `
+            <svg viewBox="-10 -40 20 80">
+                <path d="M0 -38C8 -20 8 18 0 38C-8 18 -8 -20 0 -38Z"></path>
+            </svg>
+        `;
+
+        ending.appendChild(feather);
+    }
+})();
+
+
+/* ========================================
+   13. GENERATE FEATHERED WINGS
+======================================== */
+
+function buildWing(key) {
+    let seed = 7;
+
+    function random() {
+        seed = seed * 16807 % 2147483647;
+
+        return seed / 2147483647;
+    }
+
+    const start = [256, 24];
+    const end = [70, 64];
+    const control = [170, -6];
+
+    function curvePoint(t) {
+        const u = 1 - t;
+
+        return [
+            u * u * start[0]
+                + 2 * u * t * control[0]
+                + t * t * end[0],
+
+            u * u * start[1]
+                + 2 * u * t * control[1]
+                + t * t * end[1]
+        ];
+    }
+
+    function featherPath(length, width) {
+        return `
+            M0 0
+            C${width} ${length * 0.18}
+             ${width * 0.9} ${length * 0.78}
+             0 ${length}
+            C${-width * 0.9} ${length * 0.78}
+             ${-width} ${length * 0.18}
+             0 0Z
+        `;
+    }
+
+    const layers = [
+        {
+            count: 9,
+            minLength: 150,
+            maxLength: 290,
+            width: 19,
+            start: 0.05,
+            end: 1,
+            fill: `url(#fa${key})`,
+            offsetY: 0
+        },
+        {
+            count: 11,
+            minLength: 92,
+            maxLength: 172,
+            width: 17,
+            start: 0.02,
+            end: 0.95,
+            fill: `url(#fb${key})`,
+            offsetY: 6
+        },
+        {
+            count: 14,
+            minLength: 58,
+            maxLength: 102,
+            width: 13,
+            start: 0,
+            end: 0.9,
+            fill: "#fff",
+            offsetY: 10
+        }
+    ];
+
+    let output = `
+        <defs>
+            <linearGradient
+                id="fa${key}"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+            >
+                <stop offset="0" stop-color="#e9ebf3"></stop>
+                <stop offset="1" stop-color="#9ea4b8"></stop>
+            </linearGradient>
+
+            <linearGradient
+                id="fb${key}"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+            >
+                <stop offset="0" stop-color="#f7f8fc"></stop>
+                <stop offset="1" stop-color="#c3c8d8"></stop>
+            </linearGradient>
+        </defs>
+    `;
+
+    layers.forEach((layer, layerIndex) => {
+        for (let index = 0; index < layer.count; index++) {
+            const fraction = index / (layer.count - 1);
+
+            const t =
+                layer.start
+                + (layer.end - layer.start) * fraction;
+
+            const position = curvePoint(t);
+
+            const angle =
+                -3 + fraction * 30 + (random() - 0.5) * 4;
+
+            const length =
+                (
+                    layer.minLength
+                    + (layer.maxLength - layer.minLength)
+                    * Math.pow(fraction, 1.15)
+                )
+                * (1 + (random() - 0.5) * 0.06);
+
+            const lag = fraction * 0.45 + layerIndex * 0.1;
+            const amplitude = 2 + fraction * 7;
+
+            output += `
+                <g
+                    transform="
+                        translate(
+                            ${position[0].toFixed(1)}
+                            ${(position[1] + layer.offsetY).toFixed(1)}
+                        )
+                        rotate(${angle.toFixed(1)})
+                    "
+                >
+                    <g
+                        class="fw"
+                        style="
+                            --lag: ${lag.toFixed(2)}s;
+                            --amp: ${amplitude.toFixed(1)}deg;
+                        "
+                    >
+                        <path
+                            d="${featherPath(length, layer.width)}"
+                            fill="${layer.fill}"
+                            stroke="#0b0c12"
+                            stroke-opacity=".35"
+                            stroke-width=".8"
+                        ></path>
+
+                        <path
+                            d="M0 4V${(length * 0.85).toFixed(0)}"
+                            stroke="#0b0c12"
+                            stroke-opacity=".22"
+                            stroke-width=".7"
+                            fill="none"
+                        ></path>
+                    </g>
+                </g>
+            `;
+        }
+    });
+
+    return output;
+}
+
+document.querySelectorAll(".end .wing").forEach((wing, index) => {
+    wing.innerHTML = buildWing(index);
+});
+
+
+/* ========================================
+   14. REDUCED MOTION ACCESSIBILITY
+======================================== */
+
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.querySelectorAll(".rv").forEach(element => {
+        element.classList.add("on");
+    });
+}
